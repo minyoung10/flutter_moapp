@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/info/user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../themepage/theme.dart';
@@ -31,12 +32,17 @@ class _LoginPageScreenState extends State<LoginPage> {
   void _googleSignIn() async {
     try {
       UserCredential userCredential = await signInWithGoogle();
+
+      // 모달 창을 통해 이름을 입력 받음
+      String? enteredName = await _showNameInputDialog(context);
+
       final db = FirebaseFirestore.instance;
       final docref =
           db.collection('user').doc(FirebaseAuth.instance.currentUser!.uid);
       await docref.set({
         'email': userCredential.user!.email,
-        'name': userCredential.user!.displayName,
+        'name':
+            enteredName ?? userCredential.user!.displayName ?? 'DefaultName',
         'status_message': 'I promise to take the test honestly before GOD',
         'uid': userCredential.user!.uid,
       });
@@ -74,6 +80,46 @@ class _LoginPageScreenState extends State<LoginPage> {
     }
   }
 
+  Future<String?> _showNameInputDialog(BuildContext context) async {
+    String? enteredName;
+
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('이름을 입력해 주세요'),
+          content: TextField(
+            decoration: InputDecoration(
+              //준) 선택되지 않은 밑줄 속성
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFFEFEFEF)),
+              ),
+              //준) 선택된 밑줄 속성 둘을 일치시켰음
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFFEFEFEF)),
+              ),
+              hintText: "예) 전산전자 공학부 임원단",
+              hintStyle: greyw500.copyWith(fontSize: 24),
+            ),
+            onChanged: (value) {
+              enteredName = value;
+              UserProvider.userName = enteredName;
+            },
+          ),
+          backgroundColor: Colors.white10,
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(enteredName);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,12 +135,11 @@ class _LoginPageScreenState extends State<LoginPage> {
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 foregroundColor: const Color.fromRGBO(54, 209, 0, 1),
-                backgroundColor:
-                    const Color.fromRGBO(54, 209, 0, 1), // 버튼 내의 아이콘과 텍스트 색상
+                backgroundColor: const Color.fromRGBO(54, 209, 0, 1),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // 모서리 보더 반경
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                minimumSize: const Size(343, 52), // 버튼 크기 설정
+                minimumSize: const Size(343, 52),
               ),
               child: Text('구글 로그인', style: whitew700.copyWith(fontSize: 18)),
             ),
@@ -106,12 +151,11 @@ class _LoginPageScreenState extends State<LoginPage> {
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 foregroundColor: const Color(0xFFFFFFFF),
-                backgroundColor:
-                    const Color.fromRGBO(54, 209, 0, 1), // 버튼 내의 아이콘과 텍스트 색상
+                backgroundColor: const Color.fromRGBO(54, 209, 0, 1),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // 모서리 보더 반경
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                minimumSize: const Size(343, 52), // 버튼 크기 설정
+                minimumSize: const Size(343, 52),
               ),
               child: Text('익명 로그인', style: whitew700.copyWith(fontSize: 18)),
             ),
